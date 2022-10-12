@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -32,6 +32,7 @@ func (m *Manager) ImportMarketCap() {
 		}
 
 		// activate bot
+		importedMarketCap.Close = make(chan int)
 		go importedMarketCap.watchMarketCap()
 		m.WatchMarketCap(&importedMarketCap)
 		logger.Infof("Loaded marketcap from db: %s", importedMarketCap.label())
@@ -79,7 +80,7 @@ func (m *Manager) AddMarketCap(w http.ResponseWriter, r *http.Request) {
 	logger.Debugf("Got an API request to add a MarketCap")
 
 	// read body
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Errorf("%s", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -141,6 +142,7 @@ func (m *Manager) AddMarketCap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	marketCapReq.Close = make(chan int)
 	go marketCapReq.watchMarketCap()
 	m.WatchMarketCap(&marketCapReq)
 

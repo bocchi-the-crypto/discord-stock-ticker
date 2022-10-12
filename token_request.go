@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -32,6 +32,7 @@ func (m *Manager) ImportToken() {
 		}
 
 		// activate bot
+		importedToken.Close = make(chan int)
 		go importedToken.watchTokenPrice()
 		m.WatchToken(&importedToken)
 		logger.Infof("Loaded token from db: %s", importedToken.label())
@@ -79,7 +80,7 @@ func (m *Manager) AddToken(w http.ResponseWriter, r *http.Request) {
 	logger.Debugf("Got an API request to add a token")
 
 	// read body
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Errorf("Error: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -140,6 +141,7 @@ func (m *Manager) AddToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tokenReq.Close = make(chan int)
 	go tokenReq.watchTokenPrice()
 	m.WatchToken(&tokenReq)
 

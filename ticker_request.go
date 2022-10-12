@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -35,6 +35,8 @@ func (m *Manager) ImportTicker() {
 		if importedTicker.Multiplier == 0 {
 			importedTicker.Multiplier = 1
 		}
+
+		importedTicker.Close = make(chan int)
 
 		// activate bot
 		if importedTicker.Crypto {
@@ -88,7 +90,7 @@ func (m *Manager) AddTicker(w http.ResponseWriter, r *http.Request) {
 	logger.Debugf("Got an API request to add a ticker")
 
 	// read body
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Errorf("%s", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -135,6 +137,8 @@ func (m *Manager) AddTicker(w http.ResponseWriter, r *http.Request) {
 	if stockReq.Multiplier == 0 {
 		stockReq.Multiplier = 1
 	}
+
+	stockReq.Close = make(chan int)
 
 	// add stock or crypto ticker
 	if stockReq.Crypto {
@@ -195,7 +199,7 @@ func (m *Manager) AddTicker(w http.ResponseWriter, r *http.Request) {
 		logger.Errorf("Unable to encode ticker: %s", err)
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	logger.Infof("Added ticker: %s\n", stockReq.Ticker)
+	logger.Infof("Added ticker: %s", stockReq.Ticker)
 }
 
 // WatchTicker keeps track of running
@@ -238,15 +242,15 @@ func (m *Manager) DeleteTicker(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	if _, ok := m.WatchingTicker[id]; !ok {
+	if ticker, ok := m.WatchingTicker[id]; !ok {
 		logger.Errorf("No ticker found: %s", id)
 		w.WriteHeader(http.StatusNotFound)
 		return
+	} else {
+		// send shutdown sign
+		ticker.Close <- 1
+		tickerCount.Dec()
 	}
-
-	// send shutdown sign
-	m.WatchingTicker[id].Close <- 1
-	tickerCount.Dec()
 
 	var noDB *sql.DB
 	if m.DB != noDB {

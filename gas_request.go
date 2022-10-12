@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -30,6 +30,7 @@ func (m *Manager) ImportGas() {
 			continue
 		}
 
+		importedGas.Close = make(chan int)
 		go importedGas.watchGasPrice()
 		m.WatchGas(&importedGas)
 		logger.Infof("Loaded gas from db: %s", importedGas.label())
@@ -77,7 +78,7 @@ func (m *Manager) AddGas(w http.ResponseWriter, r *http.Request) {
 	logger.Debugf("Got an API request to add a gas")
 
 	// read body
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Errorf("%s", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -129,6 +130,7 @@ func (m *Manager) AddGas(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	gasReq.Close = make(chan int)
 	go gasReq.watchGasPrice()
 	m.WatchGas(&gasReq)
 

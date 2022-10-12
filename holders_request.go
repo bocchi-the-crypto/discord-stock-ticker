@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -30,6 +30,7 @@ func (m *Manager) ImportHolder() {
 			continue
 		}
 
+		importedHolders.Close = make(chan int)
 		go importedHolders.watchHolders()
 		m.WatchHolders(&importedHolders)
 		logger.Infof("Loaded holder from db: %s", importedHolders.label())
@@ -77,7 +78,7 @@ func (m *Manager) AddHolders(w http.ResponseWriter, r *http.Request) {
 	logger.Debugf("Got an API request to add a holders")
 
 	// read body
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Errorf("%s", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -136,6 +137,7 @@ func (m *Manager) AddHolders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	holdersReq.Close = make(chan int)
 	go holdersReq.watchHolders()
 	m.WatchHolders(&holdersReq)
 

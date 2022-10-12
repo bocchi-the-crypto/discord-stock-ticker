@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -32,6 +32,7 @@ func (m *Manager) ImportValueLocked() {
 		}
 
 		// activate bot
+		importedValueLocked.Close = make(chan int)
 		go importedValueLocked.watchValueLocked()
 		m.WatchValueLocked(&importedValueLocked)
 		logger.Infof("Loaded marketcap from db: %s", importedValueLocked.label())
@@ -79,7 +80,7 @@ func (m *Manager) AddValueLocked(w http.ResponseWriter, r *http.Request) {
 	logger.Debugf("Got an API request to add a ValueLocked")
 
 	// read body
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Errorf("%s", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -141,6 +142,7 @@ func (m *Manager) AddValueLocked(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	valueLockedReq.Close = make(chan int)
 	go valueLockedReq.watchValueLocked()
 	m.WatchValueLocked(&valueLockedReq)
 
