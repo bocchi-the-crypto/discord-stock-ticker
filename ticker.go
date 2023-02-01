@@ -131,8 +131,9 @@ func (s *Ticker) watchStockPrice() {
 
 			var fmtPrice string
 			var fmtDiffPercent string
+			var diffPercent float64
 			var fmtDiffChange string
-
+			var marketState string
 			// use twelve data as source
 			if s.TwelveDataKey != "" {
 				priceDataTS, err := utils.GetTimeSeries(s.Ticker, "min", s.TwelveDataKey)
@@ -171,7 +172,9 @@ func (s *Ticker) watchStockPrice() {
 
 				fmtDiff := nowRaw - closeRaw
 				fmtDiffChange = fmt.Sprintf("%.2f", fmtDiff)
-				fmtDiffPercent = fmt.Sprintf("%.2f%%", (fmtDiff/closeRaw)*100)
+				diffPercent = (fmtDiff / closeRaw) * 100
+				fmtDiffPercent = fmt.Sprintf("%.2f%%", diffPercent)
+				marketState = ""
 			} else {
 				// use yahoo as source
 				priceData, err := utils.GetStockPrice(s.Ticker)
@@ -192,15 +195,22 @@ func (s *Ticker) watchStockPrice() {
 					fmtPrice = strconv.FormatFloat(rawPrice, 'f', 2, 64)
 				}
 
+				marketState = priceData.QuoteSummary.Results[0].Price.MarketState
 				// check for day or after hours change
-				if priceData.QuoteSummary.Results[0].Price.MarketState == "POST" {
-					fmtDiffPercent = priceData.QuoteSummary.Results[0].Price.PostMarketChangePercent.Fmt
+				if marketState == "POST" {
+					diffPercentStruct := priceData.QuoteSummary.Results[0].Price.PostMarketChangePercent
+					diffPercent = diffPercentStruct.Raw
+					fmtDiffPercent = diffPercentStruct.Fmt
 					fmtDiffChange = priceData.QuoteSummary.Results[0].Price.PostMarketChange.Fmt
-				} else if priceData.QuoteSummary.Results[0].Price.MarketState == "PRE" {
-					fmtDiffPercent = priceData.QuoteSummary.Results[0].Price.PreMarketChangePercent.Fmt
+				} else if marketState == "PRE" {
+					diffPercentStruct := priceData.QuoteSummary.Results[0].Price.PreMarketChangePercent
+					diffPercent = diffPercentStruct.Raw
+					fmtDiffPercent = diffPercentStruct.Fmt
 					fmtDiffChange = priceData.QuoteSummary.Results[0].Price.PreMarketChange.Fmt
 				} else {
-					fmtDiffPercent = priceData.QuoteSummary.Results[0].Price.RegularMarketChangePercent.Fmt
+					diffPercentStruct := priceData.QuoteSummary.Results[0].Price.RegularMarketChangePercent
+					diffPercent = diffPercentStruct.Raw
+					fmtDiffPercent = diffPercentStruct.Fmt
 					fmtDiffChange = priceData.QuoteSummary.Results[0].Price.RegularMarketChange.Fmt
 				}
 			}
@@ -215,6 +225,15 @@ func (s *Ticker) watchStockPrice() {
 				increase = true
 			}
 
+			// add plus sign to diff percentage
+			if diffPercent >= 0.0005 {
+				fmtDiffPercent = "+" + fmtDiffPercent
+			}
+
+			// removes the '%' in the end (e.g., 1.1% becomes 1.1)
+			// for flexibility when formatting string
+			fmtDiffPercent = strings.TrimSuffix(fmtDiffPercent, "%")
+
 			if arrows {
 				s.Decorator = "⬊"
 				if increase {
@@ -227,9 +246,16 @@ func (s *Ticker) watchStockPrice() {
 				var nickname string
 				var activity string
 
-				// format nickname & activity
-				nickname = fmt.Sprintf("%s %s %s%s", strings.ToUpper(s.Name), s.Decorator, s.CurrencySymbol, fmtPrice)
-				activity = fmt.Sprintf("%s%s (%s)", s.CurrencySymbol, fmtDiffChange, fmtDiffPercent)
+				// format nickname, looks like "201.75 USD"
+				nickname = fmt.Sprintf("%s %s", fmtPrice, strings.ToUpper(s.Currency))
+
+				// format activity, looks like "+0.82 % | TSLA"
+				// fmtDiffChange may be added to activity as well, if preferred
+				if len(marketState) > 0 {
+					activity = fmt.Sprintf("%s %% | %s (%s)", fmtDiffPercent, strings.ToUpper(strings.ToUpper(s.Name)), marketState)
+				} else {
+					activity = fmt.Sprintf("%s %% | %s", fmtDiffPercent, strings.ToUpper(strings.ToUpper(s.Name)))
+				}
 
 				// Update nickname in guilds
 				for _, g := range guilds {
@@ -249,7 +275,6 @@ func (s *Ticker) watchStockPrice() {
 						}
 					}
 
-					time.Sleep(time.Duration(s.Frequency) * time.Second)
 				}
 
 				// Custom activity messages
@@ -269,7 +294,7 @@ func (s *Ticker) watchStockPrice() {
 					}
 				}
 
-				err = dg.UpdateGameStatus(0, activity)
+				err = dg.UpdateStatusComplex(*newUpdateStatusData(0, discordgo.ActivityTypeWatching, activity, ""))
 				if err != nil {
 					logger.Errorf("Unable to set activity: %s", err)
 				} else {
@@ -278,21 +303,18 @@ func (s *Ticker) watchStockPrice() {
 
 			} else {
 				activity := fmt.Sprintf("%s %s %s", fmtPrice, s.Decorator, fmtDiffPercent)
-
-				err = dg.UpdateGameStatus(0, activity)
+				err = dg.UpdateStatusComplex(*newUpdateStatusData(0, discordgo.ActivityTypeWatching, activity, ""))
 				if err != nil {
 					logger.Errorf("Unable to set activity: %s", err)
 				} else {
 					logger.Debugf("Set activity: %s", activity)
 					lastUpdate.With(prometheus.Labels{"type": "ticker", "ticker": s.Ticker, "guild": "None"}).SetToCurrentTime()
 				}
-
 			}
 
+			time.Sleep(time.Duration(s.Frequency) * time.Second)
 		}
-
 	}
-
 }
 
 func (s *Ticker) watchCryptoPrice() {
@@ -423,7 +445,6 @@ func (s *Ticker) watchCryptoPrice() {
 			var priceData utils.GeckoPriceResults
 			var fmtPrice string
 			var fmtChange string
-			var changeHeader string
 			var fmtDiffPercent string
 
 			// get the coin price data
@@ -458,37 +479,10 @@ func (s *Ticker) watchCryptoPrice() {
 			fmtChange = fmt.Sprintf("%.2f", priceData.MarketData.PriceChangeCurrency.USD)
 
 			// Check for custom decimal places
-			switch s.Decimals {
-			case 0:
-				fmtPrice = fmt.Sprintf("%s%.0f", s.CurrencySymbol, priceData.MarketData.CurrentPrice.USD)
-			case 1:
-				fmtPrice = fmt.Sprintf("%s%.1f", s.CurrencySymbol, priceData.MarketData.CurrentPrice.USD)
-			case 2:
-				fmtPrice = fmt.Sprintf("%s%.2f", s.CurrencySymbol, priceData.MarketData.CurrentPrice.USD)
-			case 3:
-				fmtPrice = fmt.Sprintf("%s%.3f", s.CurrencySymbol, priceData.MarketData.CurrentPrice.USD)
-			case 4:
-				fmtPrice = fmt.Sprintf("%s%.4f", s.CurrencySymbol, priceData.MarketData.CurrentPrice.USD)
-			case 5:
-				fmtPrice = fmt.Sprintf("%s%.5f", s.CurrencySymbol, priceData.MarketData.CurrentPrice.USD)
-			case 6:
-				fmtPrice = fmt.Sprintf("%s%.6f", s.CurrencySymbol, priceData.MarketData.CurrentPrice.USD)
-			case 7:
-				fmtPrice = fmt.Sprintf("%s%.7f", s.CurrencySymbol, priceData.MarketData.CurrentPrice.USD)
-			case 8:
-				fmtPrice = fmt.Sprintf("%s%.8f", s.CurrencySymbol, priceData.MarketData.CurrentPrice.USD)
-			case 9:
-				fmtPrice = fmt.Sprintf("%s%.9f", s.CurrencySymbol, priceData.MarketData.CurrentPrice.USD)
-			case 10:
-				fmtPrice = fmt.Sprintf("%s%.10f", s.CurrencySymbol, priceData.MarketData.CurrentPrice.USD)
-			case 11:
-				fmtPrice = fmt.Sprintf("%s%.11f", s.CurrencySymbol, priceData.MarketData.CurrentPrice.USD)
-			case 12:
-				fmtPrice = fmt.Sprintf("%s%.12f", s.CurrencySymbol, priceData.MarketData.CurrentPrice.USD)
-			case 13:
-				fmtPrice = fmt.Sprintf("%s%.13f", s.CurrencySymbol, priceData.MarketData.CurrentPrice.USD)
-			default:
-
+			if s.Decimals >= 0 && s.Decimals <= 13 {
+				fmtTemplate := fmt.Sprintf("%%.%df", s.Decimals)
+				fmtPrice = fmt.Sprintf(fmtTemplate, priceData.MarketData.CurrentPrice.USD)
+			} else {
 				// Check for cryptos below 1c
 				if priceData.MarketData.CurrentPrice.USD < 0.01 {
 					priceData.MarketData.CurrentPrice.USD = priceData.MarketData.CurrentPrice.USD * 100
@@ -498,9 +492,9 @@ func (s *Ticker) watchCryptoPrice() {
 						fmtPrice = fmt.Sprintf("%.6f¢", priceData.MarketData.CurrentPrice.USD)
 					}
 				} else if priceData.MarketData.CurrentPrice.USD < 1.0 {
-					fmtPrice = fmt.Sprintf("%s%.3f", s.CurrencySymbol, priceData.MarketData.CurrentPrice.USD)
+					fmtPrice = fmt.Sprintf("%.3f", priceData.MarketData.CurrentPrice.USD)
 				} else {
-					fmtPrice = fmt.Sprintf("%s%.2f", s.CurrencySymbol, priceData.MarketData.CurrentPrice.USD)
+					fmtPrice = fmt.Sprintf("%.2f", priceData.MarketData.CurrentPrice.USD)
 				}
 			}
 
@@ -512,6 +506,11 @@ func (s *Ticker) watchCryptoPrice() {
 				increase = false
 			} else {
 				increase = true
+			}
+
+			// add plus sign to diff percentage
+			if priceData.MarketData.PriceChangePercent >= 0.0005 {
+				fmtDiffPercent = "+" + fmtDiffPercent
 			}
 
 			// set arrows based on movement
@@ -535,12 +534,8 @@ func (s *Ticker) watchCryptoPrice() {
 					displayName = strings.ToUpper(priceData.Symbol)
 				}
 
-				// format nickname
-				if displayName == s.Decorator {
-					nickname = fmtPrice
-				} else {
-					nickname = fmt.Sprintf("%s %s %s", displayName, s.Decorator, fmtPrice)
-				}
+				// format nickname, looks like "0.059741 USD"
+				nickname = fmt.Sprintf("%s %s", fmtPrice, strings.ToUpper(s.Currency))
 
 				// format activity
 				if s.Pair != "" {
@@ -554,7 +549,7 @@ func (s *Ticker) watchCryptoPrice() {
 					}
 					if err != nil {
 						logger.Errorf("Unable to fetch pair price for %s: %s", s.Pair, err)
-						activity = fmt.Sprintf("%s%s (%s%%)", changeHeader, fmtChange, fmtDiffPercent)
+						activity = fmt.Sprintf("%s%%", fmtDiffPercent)
 					} else {
 
 						// set pair
@@ -576,10 +571,11 @@ func (s *Ticker) watchCryptoPrice() {
 						}
 					}
 				} else {
+					// activity will be formatted like "-0.82 % | DOGEUSD"
 					if math.Abs(priceData.MarketData.PriceChangeCurrency.USD) < 0.01 {
-						activity = fmt.Sprintf("%s%%", fmtDiffPercent)
+						activity = fmt.Sprintf("%s %% | %s%s", fmtDiffPercent, strings.ToUpper(priceData.Symbol), strings.ToUpper(s.Currency))
 					} else {
-						activity = fmt.Sprintf("%s%s (%s%%)", changeHeader, fmtChange, fmtDiffPercent)
+						activity = fmt.Sprintf("%s %% | %s%s", fmtDiffPercent, strings.ToUpper(priceData.Symbol), strings.ToUpper(s.Currency))
 					}
 				}
 
@@ -600,8 +596,6 @@ func (s *Ticker) watchCryptoPrice() {
 							logger.Errorf("Color roles: %s", err)
 						}
 					}
-
-					time.Sleep(time.Duration(s.Frequency) * time.Second)
 				}
 
 				// Custom activity messages
@@ -624,7 +618,8 @@ func (s *Ticker) watchCryptoPrice() {
 				// set activity
 				wg := sync.WaitGroup{}
 				for _, sess := range shards {
-					err = sess.UpdateGameStatus(0, activity)
+					err = sess.UpdateStatusComplex(*newUpdateStatusData(0, discordgo.ActivityTypeWatching, activity, ""))
+
 					if err != nil {
 						logger.Errorf("Unable to set activity: %s", err)
 					} else {
@@ -634,6 +629,7 @@ func (s *Ticker) watchCryptoPrice() {
 				}
 				wg.Wait()
 
+				time.Sleep(time.Duration(s.Frequency) * time.Second)
 			} else {
 
 				// format activity
@@ -653,4 +649,24 @@ func (s *Ticker) watchCryptoPrice() {
 			}
 		}
 	}
+}
+
+func newUpdateStatusData(idle int, activityType discordgo.ActivityType, name, url string) *discordgo.UpdateStatusData {
+	usd := &discordgo.UpdateStatusData{
+		Status: "online",
+	}
+
+	if idle > 0 {
+		usd.IdleSince = &idle
+	}
+
+	if name != "" {
+		usd.Activities = []*discordgo.Activity{{
+			Name: name,
+			Type: activityType,
+			URL:  url,
+		}}
+	}
+
+	return usd
 }
