@@ -15,19 +15,19 @@ import (
 )
 
 type Token struct {
-	Network   string   `json:"network"`
-	Contract  string   `json:"contract"`
-	Name      string   `json:"name"`
-	Nickname  bool     `json:"nickname"`
-	Frequency int      `json:"frequency"`
-	Color     bool     `json:"color"`
-	Decorator string   `json:"decorator"`
-	Decimals  int      `json:"decimals"`
-	Activity  string   `json:"activity"`
-	Source    string   `json:"source"`
-	ClientID  string   `json:"client_id"`
-	Token     string   `json:"discord_bot_token"`
-	Close     chan int `json:"-"`
+	Network   string        `json:"network"`
+	Contract  string        `json:"contract"`
+	Name      string        `json:"name"`
+	Nickname  bool          `json:"nickname"`
+	Frequency int           `json:"frequency"`
+	Color     bool          `json:"color"`
+	Decorator string        `json:"decorator"`
+	Decimals  int           `json:"decimals"`
+	Activity  string        `json:"activity"`
+	Source    string        `json:"source"`
+	ClientID  string        `json:"client_id"`
+	Token     string        `json:"discord_bot_token"`
+	Close     chan struct{} `json:"-"`
 }
 
 // label returns a human readble id for this bot

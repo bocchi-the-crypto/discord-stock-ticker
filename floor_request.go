@@ -33,7 +33,7 @@ func (m *Manager) ImportFloor() {
 			continue
 		}
 
-		importedFloor.Close = make(chan int)
+		importedFloor.Close = make(chan struct{})
 		go importedFloor.watchFloorPrice()
 		m.WatchFloor(&importedFloor)
 		logger.Infof("Loaded floor from db: %s", importedFloor.label())
@@ -140,7 +140,7 @@ func (m *Manager) AddFloor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	floorReq.Close = make(chan int)
+	floorReq.Close = make(chan struct{})
 	go floorReq.watchFloorPrice()
 	m.WatchFloor(&floorReq)
 
@@ -204,7 +204,7 @@ func (m *Manager) DeleteFloor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send shutdown sign
-	m.WatchingFloor[id].Close <- 1
+	m.WatchingFloor[id].Close <- struct{}{}
 	floorCount.Dec()
 
 	var noDB *sql.DB
@@ -247,7 +247,7 @@ func (m *Manager) RestartFloor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send shutdown sign
-	m.WatchingFloor[id].Close <- 1
+	m.WatchingFloor[id].Close <- struct{}{}
 
 	// wait twice the update time
 	time.Sleep(time.Duration(m.WatchingFloor[id].Frequency) * 2 * time.Second)

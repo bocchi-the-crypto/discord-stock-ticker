@@ -32,7 +32,7 @@ func (m *Manager) ImportToken() {
 		}
 
 		// activate bot
-		importedToken.Close = make(chan int)
+		importedToken.Close = make(chan struct{})
 		go importedToken.watchTokenPrice()
 		m.WatchToken(&importedToken)
 		logger.Infof("Loaded token from db: %s", importedToken.label())
@@ -141,7 +141,7 @@ func (m *Manager) AddToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenReq.Close = make(chan int)
+	tokenReq.Close = make(chan struct{})
 	go tokenReq.watchTokenPrice()
 	m.WatchToken(&tokenReq)
 
@@ -205,7 +205,7 @@ func (m *Manager) DeleteToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send shutdown sign
-	m.WatchingToken[id].Close <- 1
+	m.WatchingToken[id].Close <- struct{}{}
 	tokenCount.Dec()
 
 	var noDB *sql.DB
@@ -249,7 +249,7 @@ func (m *Manager) RestartToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send shutdown sign
-	m.WatchingToken[id].Close <- 1
+	m.WatchingToken[id].Close <- struct{}{}
 
 	// wait twice the update time
 	time.Sleep(time.Duration(m.WatchingToken[id].Frequency) * 2 * time.Second)

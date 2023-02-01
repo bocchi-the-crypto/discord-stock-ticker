@@ -32,6 +32,7 @@ func (m *Manager) ImportCirculating() {
 		}
 
 		// activate bot
+		importedCirculating.Close = make(chan struct{})
 		go importedCirculating.watchCirculating()
 		m.WatchCirculating(&importedCirculating)
 		logger.Infof("Loaded circulating from db: %s", importedCirculating.label())
@@ -131,6 +132,7 @@ func (m *Manager) AddCirculating(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	circulatingReq.Close = make(chan struct{})
 	go circulatingReq.watchCirculating()
 	m.WatchCirculating(&circulatingReq)
 
@@ -193,7 +195,7 @@ func (m *Manager) DeleteCirculating(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// send shutdown sign
-	m.WatchingCirculating[id].Close <- 1
+	m.WatchingCirculating[id].Close <- struct{}{}
 	circulatingCount.Dec()
 
 	var noDB *sql.DB
@@ -235,7 +237,7 @@ func (m *Manager) RestartCirculating(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// send shutdown sign
-	m.WatchingCirculating[id].Close <- 1
+	m.WatchingCirculating[id].Close <- struct{}{}
 
 	// wait twice the update time
 	time.Sleep(time.Duration(m.WatchingCirculating[id].Frequency) * 2 * time.Second)

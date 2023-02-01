@@ -13,14 +13,14 @@ import (
 
 // Holders represents the json for holders
 type Holders struct {
-	Network   string   `json:"network"`
-	Address   string   `json:"address"`
-	Activity  string   `json:"activity"`
-	Nickname  bool     `json:"nickname"`
-	Frequency int      `json:"frequency"`
-	ClientID  string   `json:"client_id"`
-	Token     string   `json:"discord_bot_token"`
-	Close     chan int `json:"-"`
+	Network   string        `json:"network"`
+	Address   string        `json:"address"`
+	Activity  string        `json:"activity"`
+	Nickname  bool          `json:"nickname"`
+	Frequency int           `json:"frequency"`
+	ClientID  string        `json:"client_id"`
+	Token     string        `json:"discord_bot_token"`
+	Close     chan struct{} `json:"-"`
 }
 
 // label returns a human readble id for this bot

@@ -13,18 +13,18 @@ import (
 )
 
 type Board struct {
-	Items      []string `json:"items"`
-	Name       string   `json:"name"`
-	Crypto     bool     `json:"crypto"`
-	Header     string   `json:"header"`
-	Nickname   bool     `json:"nickname"`
-	Color      bool     `json:"color"`
-	Percentage bool     `json:"percentage"`
-	Arrows     bool     `json:"arrows"`
-	Frequency  int      `json:"frequency"`
-	ClientID   string   `json:"client_id"`
-	Token      string   `json:"discord_bot_token"`
-	Close      chan int `json:"-"`
+	Items      []string      `json:"items"`
+	Name       string        `json:"name"`
+	Crypto     bool          `json:"crypto"`
+	Header     string        `json:"header"`
+	Nickname   bool          `json:"nickname"`
+	Color      bool          `json:"color"`
+	Percentage bool          `json:"percentage"`
+	Arrows     bool          `json:"arrows"`
+	Frequency  int           `json:"frequency"`
+	ClientID   string        `json:"client_id"`
+	Token      string        `json:"discord_bot_token"`
+	Close      chan struct{} `json:"-"`
 }
 
 // label returns a human readble id for this bot

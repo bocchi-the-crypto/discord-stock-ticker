@@ -16,19 +16,19 @@ import (
 )
 
 type MarketCap struct {
-	Ticker         string   `json:"ticker"`
-	Name           string   `json:"name"`
-	Nickname       bool     `json:"nickname"`
-	Frequency      int      `json:"frequency"`
-	Color          bool     `json:"color"`
-	Decorator      string   `json:"decorator"`
-	Currency       string   `json:"currency"`
-	CurrencySymbol string   `json:"currency_symbol"`
-	Decimals       int      `json:"decimals"`
-	Activity       string   `json:"activity"`
-	ClientID       string   `json:"client_id"`
-	Token          string   `json:"discord_bot_token"`
-	Close          chan int `json:"-"`
+	Ticker         string        `json:"ticker"`
+	Name           string        `json:"name"`
+	Nickname       bool          `json:"nickname"`
+	Frequency      int           `json:"frequency"`
+	Color          bool          `json:"color"`
+	Decorator      string        `json:"decorator"`
+	Currency       string        `json:"currency"`
+	CurrencySymbol string        `json:"currency_symbol"`
+	Decimals       int           `json:"decimals"`
+	Activity       string        `json:"activity"`
+	ClientID       string        `json:"client_id"`
+	Token          string        `json:"discord_bot_token"`
+	Close          chan struct{} `json:"-"`
 }
 
 // label returns a human readble id for this bot

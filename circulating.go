@@ -16,16 +16,16 @@ import (
 )
 
 type Circulating struct {
-	Ticker         string   `json:"ticker"`
-	Name           string   `json:"name"`
-	Nickname       bool     `json:"nickname"`
-	Frequency      int      `json:"frequency"`
-	CurrencySymbol string   `json:"currency_symbol"`
-	Decimals       int      `json:"decimals"`
-	Activity       string   `json:"activity"`
-	ClientID       string   `json:"client_id"`
-	Token          string   `json:"discord_bot_token"`
-	Close          chan int `json:"-"`
+	Ticker         string        `json:"ticker"`
+	Name           string        `json:"name"`
+	Nickname       bool          `json:"nickname"`
+	Frequency      int           `json:"frequency"`
+	CurrencySymbol string        `json:"currency_symbol"`
+	Decimals       int           `json:"decimals"`
+	Activity       string        `json:"activity"`
+	ClientID       string        `json:"client_id"`
+	Token          string        `json:"discord_bot_token"`
+	Close          chan struct{} `json:"-"`
 }
 
 // label returns a human readble id for this bot

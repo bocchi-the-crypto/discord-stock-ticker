@@ -36,7 +36,7 @@ func (m *Manager) ImportTicker() {
 			importedTicker.Multiplier = 1
 		}
 
-		importedTicker.Close = make(chan int)
+		importedTicker.Close = make(chan struct{})
 
 		// activate bot
 		if importedTicker.Crypto {
@@ -138,7 +138,7 @@ func (m *Manager) AddTicker(w http.ResponseWriter, r *http.Request) {
 		stockReq.Multiplier = 1
 	}
 
-	stockReq.Close = make(chan int)
+	stockReq.Close = make(chan struct{})
 
 	// add stock or crypto ticker
 	if stockReq.Crypto {
@@ -248,7 +248,7 @@ func (m *Manager) DeleteTicker(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		// send shutdown sign
-		ticker.Close <- 1
+		ticker.Close <- struct{}{}
 		tickerCount.Dec()
 	}
 
@@ -305,7 +305,7 @@ func (m *Manager) RestartTicker(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// send shutdown sign
-	m.WatchingTicker[id].Close <- 1
+	m.WatchingTicker[id].Close <- struct{}{}
 
 	// wait twice the update time
 	time.Sleep(time.Duration(m.WatchingTicker[id].Frequency) * 2 * time.Second)

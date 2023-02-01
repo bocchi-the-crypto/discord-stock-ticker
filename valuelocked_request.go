@@ -32,7 +32,7 @@ func (m *Manager) ImportValueLocked() {
 		}
 
 		// activate bot
-		importedValueLocked.Close = make(chan int)
+		importedValueLocked.Close = make(chan struct{})
 		go importedValueLocked.watchValueLocked()
 		m.WatchValueLocked(&importedValueLocked)
 		logger.Infof("Loaded marketcap from db: %s", importedValueLocked.label())
@@ -142,7 +142,7 @@ func (m *Manager) AddValueLocked(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	valueLockedReq.Close = make(chan int)
+	valueLockedReq.Close = make(chan struct{})
 	go valueLockedReq.watchValueLocked()
 	m.WatchValueLocked(&valueLockedReq)
 
@@ -205,7 +205,7 @@ func (m *Manager) DeleteValueLocked(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// send shutdown sign
-	m.WatchingValueLocked[id].Close <- 1
+	m.WatchingValueLocked[id].Close <- struct{}{}
 	marketcapCount.Dec()
 
 	var noDB *sql.DB
@@ -247,7 +247,7 @@ func (m *Manager) RestartValueLocked(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// send shutdown sign
-	m.WatchingValueLocked[id].Close <- 1
+	m.WatchingValueLocked[id].Close <- struct{}{}
 
 	// wait twice the update time
 	time.Sleep(time.Duration(m.WatchingValueLocked[id].Frequency) * 2 * time.Second)

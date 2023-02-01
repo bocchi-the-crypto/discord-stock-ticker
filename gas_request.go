@@ -30,7 +30,7 @@ func (m *Manager) ImportGas() {
 			continue
 		}
 
-		importedGas.Close = make(chan int)
+		importedGas.Close = make(chan struct{})
 		go importedGas.watchGasPrice()
 		m.WatchGas(&importedGas)
 		logger.Infof("Loaded gas from db: %s", importedGas.label())
@@ -130,7 +130,7 @@ func (m *Manager) AddGas(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gasReq.Close = make(chan int)
+	gasReq.Close = make(chan struct{})
 	go gasReq.watchGasPrice()
 	m.WatchGas(&gasReq)
 
@@ -194,7 +194,7 @@ func (m *Manager) DeleteGas(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send shutdown sign
-	m.WatchingGas[id].Close <- 1
+	m.WatchingGas[id].Close <- struct{}{}
 	gasCount.Dec()
 
 	var noDB *sql.DB
@@ -237,7 +237,7 @@ func (m *Manager) RestartGas(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send shutdown sign
-	m.WatchingGas[id].Close <- 1
+	m.WatchingGas[id].Close <- struct{}{}
 
 	// wait twice the update time
 	time.Sleep(time.Duration(m.WatchingGas[id].Frequency) * 2 * time.Second)

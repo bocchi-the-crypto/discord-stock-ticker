@@ -13,12 +13,12 @@ import (
 
 // Gas represents the gas data
 type Gas struct {
-	Network   string   `json:"network"`
-	Nickname  bool     `json:"nickname"`
-	Frequency int      `json:"frequency"`
-	ClientID  string   `json:"client_id"`
-	Token     string   `json:"discord_bot_token"`
-	Close     chan int `json:"-"`
+	Network   string        `json:"network"`
+	Nickname  bool          `json:"nickname"`
+	Frequency int           `json:"frequency"`
+	ClientID  string        `json:"client_id"`
+	Token     string        `json:"discord_bot_token"`
+	Close     chan struct{} `json:"-"`
 }
 
 // label returns a human readble id for this bot

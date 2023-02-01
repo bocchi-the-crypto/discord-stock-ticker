@@ -38,6 +38,8 @@ func (m *Manager) ImportBoard() {
 		}
 
 		importedBoard.Items = strings.Split(itemsBulk, itemSplit)
+		importedBoard.Close = make(chan struct{})
+
 		if importedBoard.Crypto {
 			go importedBoard.watchCryptoPrice()
 			m.WatchBoard(&importedBoard)
@@ -135,6 +137,8 @@ func (m *Manager) AddBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	boardReq.Close = make(chan struct{})
+
 	// add stock or crypto board
 	if boardReq.Crypto {
 
@@ -220,7 +224,7 @@ func (m *Manager) DeleteBoard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send shutdown sign
-	m.WatchingBoard[id].Close <- 1
+	m.WatchingBoard[id].Close <- struct{}{}
 	boardCount.Dec()
 
 	var noDB *sql.DB
@@ -264,7 +268,7 @@ func (m *Manager) RestartBoard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send shutdown sign
-	m.WatchingBoard[id].Close <- 1
+	m.WatchingBoard[id].Close <- struct{}{}
 
 	// wait twice the update time
 	time.Sleep(time.Duration(m.WatchingBoard[id].Frequency) * 2 * time.Second)

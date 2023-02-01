@@ -30,7 +30,7 @@ func (m *Manager) ImportHolder() {
 			continue
 		}
 
-		importedHolders.Close = make(chan int)
+		importedHolders.Close = make(chan struct{})
 		go importedHolders.watchHolders()
 		m.WatchHolders(&importedHolders)
 		logger.Infof("Loaded holder from db: %s", importedHolders.label())
@@ -137,7 +137,7 @@ func (m *Manager) AddHolders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	holdersReq.Close = make(chan int)
+	holdersReq.Close = make(chan struct{})
 	go holdersReq.watchHolders()
 	m.WatchHolders(&holdersReq)
 
@@ -201,7 +201,7 @@ func (m *Manager) DeleteHolders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send shutdown sign
-	m.WatchingHolders[id].Close <- 1
+	m.WatchingHolders[id].Close <- struct{}{}
 	holdersCount.Dec()
 
 	var noDB *sql.DB
@@ -244,7 +244,7 @@ func (m *Manager) RestartHolders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send shutdown sign
-	m.WatchingHolders[id].Close <- 1
+	m.WatchingHolders[id].Close <- struct{}{}
 
 	// wait twice the update time
 	time.Sleep(time.Duration(m.WatchingHolders[id].Frequency) * 2 * time.Second)

@@ -32,7 +32,7 @@ func (m *Manager) ImportMarketCap() {
 		}
 
 		// activate bot
-		importedMarketCap.Close = make(chan int)
+		importedMarketCap.Close = make(chan struct{})
 		go importedMarketCap.watchMarketCap()
 		m.WatchMarketCap(&importedMarketCap)
 		logger.Infof("Loaded marketcap from db: %s", importedMarketCap.label())
@@ -142,7 +142,7 @@ func (m *Manager) AddMarketCap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	marketCapReq.Close = make(chan int)
+	marketCapReq.Close = make(chan struct{})
 	go marketCapReq.watchMarketCap()
 	m.WatchMarketCap(&marketCapReq)
 
@@ -205,7 +205,7 @@ func (m *Manager) DeleteMarketCap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// send shutdown sign
-	m.WatchingMarketCap[id].Close <- 1
+	m.WatchingMarketCap[id].Close <- struct{}{}
 	marketcapCount.Dec()
 
 	var noDB *sql.DB
@@ -247,7 +247,7 @@ func (m *Manager) RestartMarketCap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// send shutdown sign
-	m.WatchingMarketCap[id].Close <- 1
+	m.WatchingMarketCap[id].Close <- struct{}{}
 
 	// wait twice the update time
 	time.Sleep(time.Duration(m.WatchingMarketCap[id].Frequency) * 2 * time.Second)
