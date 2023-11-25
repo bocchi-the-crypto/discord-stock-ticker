@@ -1,13 +1,23 @@
-FROM golang:latest AS base
-LABEL org.opencontainers.image.source https://github.com/rssnyder/discord-stock-ticker
+FROM golang:latest AS builder
 
 WORKDIR /go/src/discord-stock-ticker
 
 COPY . .
 
-ARG TARGETOS=linux
-ARG TARGETARCH=amd64
+RUN go mod download
+RUN CGO_ENABLED=0 GOOS=linux go build -o discord-stock-ticker
 
-RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o discord-stock-ticker
+# Stage 2
+FROM alpine:latest  
+LABEL org.opencontainers.image.source https://github.com/bocchi-the-crypto/discord-stock-ticker
 
-ENTRYPOINT ["/go/src/discord-stock-ticker/discord-stock-ticker"]
+WORKDIR /app
+
+RUN apk --no-cache add ca-certificates
+
+COPY --from=builder /go/src/discord-stock-ticker/discord-stock-ticker .
+
+# expose API server port
+EXPOSE 7439
+
+CMD ["./discord-stock-ticker", "-db=/app/discordbottickers.db", "-address=0.0.0.0:7439"]
