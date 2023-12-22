@@ -259,6 +259,7 @@ func (s *Ticker) watchStockPrice() {
 
 				// Update nickname in guilds
 				for _, g := range guilds {
+					logger.Debugf("Updating nickname to %s", nickname)
 					err = dg.GuildMemberNickname(g.ID, "@me", nickname)
 					if err != nil {
 						logger.Errorf("Updating nickname: %s", err)
