@@ -1,3 +1,5 @@
+(This project is a fork of rssnyder/discord-stock-ticker, thanks for the original author for the awesome repo!)
+
 # discord-stock-ticker
 
 Live stock and crypto tickers for your discord server.
