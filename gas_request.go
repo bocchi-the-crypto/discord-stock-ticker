@@ -30,6 +30,7 @@ func (m *Manager) ImportGas() {
 			continue
 		}
 
+		importedGas.close = make(chan struct{})
 		go importedGas.watchGasPrice()
 		m.WatchGas(&importedGas)
 		logger.Infof("Loaded gas from db: %s", importedGas.label())
@@ -129,6 +130,7 @@ func (m *Manager) AddGas(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	gasReq.close = make(chan struct{})
 	go gasReq.watchGasPrice()
 	m.WatchGas(&gasReq)
 

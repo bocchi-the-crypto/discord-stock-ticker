@@ -14,19 +14,19 @@ import (
 )
 
 type Token struct {
-	Network   string   `json:"network"`
-	Contract  string   `json:"contract"`
-	Name      string   `json:"name"`
-	Nickname  bool     `json:"nickname"`
-	Frequency int      `json:"frequency"`
-	Color     bool     `json:"color"`
-	Decorator string   `json:"decorator"`
-	Decimals  int      `json:"decimals"`
-	Activity  string   `json:"activity"`
-	Source    string   `json:"source"`
-	ClientID  string   `json:"client_id"`
-	Token     string   `json:"discord_bot_token"`
-	close     chan int `json:"-"`
+	Network   string        `json:"network"`
+	Contract  string        `json:"contract"`
+	Name      string        `json:"name"`
+	Nickname  bool          `json:"nickname"`
+	Frequency int           `json:"frequency"`
+	Color     bool          `json:"color"`
+	Decorator string        `json:"decorator"`
+	Decimals  int           `json:"decimals"`
+	Activity  string        `json:"activity"`
+	Source    string        `json:"source"`
+	ClientID  string        `json:"client_id"`
+	Token     string        `json:"discord_bot_token"`
+	close     chan struct{} `json:"-"`
 }
 
 // label returns a human readble id for this bot
@@ -57,7 +57,7 @@ func formatActivity(t *Token, price float64) string {
 }
 
 func (t *Token) Shutdown() {
-	t.close <- 1
+	t.close <- struct{}{}
 }
 
 func (t *Token) watchTokenPrice() {
@@ -118,7 +118,7 @@ func (t *Token) watchTokenPrice() {
 	ticker := time.NewTicker(time.Duration(t.Frequency) * time.Second)
 	var success bool
 
-	t.close = make(chan int, 1)
+	t.close = make(chan struct{}, 1)
 
 	// continuously watch
 	var oldPrice float64

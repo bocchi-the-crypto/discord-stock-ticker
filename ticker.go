@@ -15,25 +15,25 @@ import (
 )
 
 type Ticker struct {
-	Ticker         string   `json:"ticker"`
-	Name           string   `json:"name"`
-	Nickname       bool     `json:"nickname"`
-	Frequency      int      `json:"frequency"`
-	Color          bool     `json:"color"`
-	Decorator      string   `json:"decorator"`
-	Currency       string   `json:"currency"`
-	CurrencySymbol string   `json:"currency_symbol"`
-	Decimals       int      `json:"decimals"`
-	Activity       string   `json:"activity"`
-	Pair           string   `json:"pair"`
-	PairFlip       bool     `json:"pair_flip"`
-	Multiplier     int      `json:"multiplier"`
-	ClientID       string   `json:"client_id"`
-	Crypto         bool     `json:"crypto"`
-	Token          string   `json:"discord_bot_token"`
-	TwelveDataKey  string   `json:"twelve_data_key"`
-	Exrate         float64  `json:"exrate"`
-	close          chan int `json:"-"`
+	Ticker         string        `json:"ticker"`
+	Name           string        `json:"name"`
+	Nickname       bool          `json:"nickname"`
+	Frequency      int           `json:"frequency"`
+	Color          bool          `json:"color"`
+	Decorator      string        `json:"decorator"`
+	Currency       string        `json:"currency"`
+	CurrencySymbol string        `json:"currency_symbol"`
+	Decimals       int           `json:"decimals"`
+	Activity       string        `json:"activity"`
+	Pair           string        `json:"pair"`
+	PairFlip       bool          `json:"pair_flip"`
+	Multiplier     int           `json:"multiplier"`
+	ClientID       string        `json:"client_id"`
+	Crypto         bool          `json:"crypto"`
+	Token          string        `json:"discord_bot_token"`
+	TwelveDataKey  string        `json:"twelve_data_key"`
+	Exrate         float64       `json:"exrate"`
+	close          chan struct{} `json:"-"`
 }
 
 // label returns a human readble id for this bot
@@ -52,7 +52,7 @@ func (s *Ticker) label() string {
 
 // Shutdown sends a signal to shut off the goroutine
 func (s *Ticker) Shutdown() {
-	s.close <- 1
+	s.close <- struct{}{}
 }
 
 func (s *Ticker) watchStockPrice() {
@@ -128,7 +128,7 @@ func (s *Ticker) watchStockPrice() {
 	logger.Infof("Watching stock price for %s", s.Ticker)
 	ticker := time.NewTicker(time.Duration(s.Frequency) * time.Second)
 
-	s.close = make(chan int, 1)
+	s.close = make(chan struct{}, 1)
 
 	// continuously watch
 	for {
@@ -424,7 +424,7 @@ func (s *Ticker) watchCryptoPrice() {
 	ticker := time.NewTicker(time.Duration(s.Frequency) * time.Second)
 	var success bool
 
-	s.close = make(chan int, 1)
+	s.close = make(chan struct{}, 1)
 
 	// continuously watch
 	for {

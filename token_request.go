@@ -32,6 +32,7 @@ func (m *Manager) ImportToken() {
 		}
 
 		// activate bot
+		importedToken.close = make(chan struct{})
 		go importedToken.watchTokenPrice()
 		m.WatchToken(&importedToken)
 		logger.Infof("Loaded token from db: %s", importedToken.label())
@@ -140,6 +141,7 @@ func (m *Manager) AddToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tokenReq.close = make(chan struct{})
 	go tokenReq.watchTokenPrice()
 	m.WatchToken(&tokenReq)
 

@@ -32,6 +32,7 @@ func (m *Manager) ImportCirculating() {
 		}
 
 		// activate bot
+		importedCirculating.close = make(chan struct{})
 		go importedCirculating.watchCirculating()
 		m.WatchCirculating(&importedCirculating)
 		logger.Infof("Loaded circulating from db: %s", importedCirculating.label())
@@ -131,6 +132,7 @@ func (m *Manager) AddCirculating(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	circulatingReq.close = make(chan struct{})
 	go circulatingReq.watchCirculating()
 	m.WatchCirculating(&circulatingReq)
 

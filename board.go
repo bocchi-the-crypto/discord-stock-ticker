@@ -12,18 +12,18 @@ import (
 )
 
 type Board struct {
-	Items      []string `json:"items"`
-	Name       string   `json:"name"`
-	Crypto     bool     `json:"crypto"`
-	Header     string   `json:"header"`
-	Nickname   bool     `json:"nickname"`
-	Color      bool     `json:"color"`
-	Percentage bool     `json:"percentage"`
-	Arrows     bool     `json:"arrows"`
-	Frequency  int      `json:"frequency"`
-	ClientID   string   `json:"client_id"`
-	Token      string   `json:"discord_bot_token"`
-	close      chan int `json:"-"`
+	Items      []string      `json:"items"`
+	Name       string        `json:"name"`
+	Crypto     bool          `json:"crypto"`
+	Header     string        `json:"header"`
+	Nickname   bool          `json:"nickname"`
+	Color      bool          `json:"color"`
+	Percentage bool          `json:"percentage"`
+	Arrows     bool          `json:"arrows"`
+	Frequency  int           `json:"frequency"`
+	ClientID   string        `json:"client_id"`
+	Token      string        `json:"discord_bot_token"`
+	close      chan struct{} `json:"-"`
 }
 
 // label returns a human readble id for this bot
@@ -37,7 +37,7 @@ func (b *Board) label() string {
 
 // Shutdown sends a signal to shut off the goroutine
 func (b *Board) Shutdown() {
-	b.close <- 1
+	b.close <- struct{}{}
 }
 
 func (b *Board) watchStockPrice() {
@@ -76,7 +76,7 @@ func (b *Board) watchStockPrice() {
 	logger.Infof("Watching board for %s", b.Name)
 	ticker := time.NewTicker(time.Duration(b.Frequency) * time.Second)
 
-	b.close = make(chan int, 1)
+	b.close = make(chan struct{}, 1)
 
 	// continuously watch
 	for {
@@ -250,7 +250,7 @@ func (b *Board) watchCryptoPrice() {
 	ticker := time.NewTicker(time.Duration(b.Frequency) * time.Second)
 	var success bool
 
-	b.close = make(chan int, 1)
+	b.close = make(chan struct{}, 1)
 
 	// continuously watch
 	for {

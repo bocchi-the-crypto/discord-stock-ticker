@@ -38,6 +38,8 @@ func (m *Manager) ImportBoard() {
 		}
 
 		importedBoard.Items = strings.Split(itemsBulk, itemSplit)
+		importedBoard.close = make(chan struct{})
+
 		if importedBoard.Crypto {
 			go importedBoard.watchCryptoPrice()
 			m.WatchBoard(&importedBoard)
@@ -134,6 +136,8 @@ func (m *Manager) AddBoard(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	boardReq.close = make(chan struct{})
 
 	// add stock or crypto board
 	if boardReq.Crypto {

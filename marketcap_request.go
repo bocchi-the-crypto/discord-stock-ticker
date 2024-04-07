@@ -32,6 +32,7 @@ func (m *Manager) ImportMarketCap() {
 		}
 
 		// activate bot
+		importedMarketCap.close = make(chan struct{})
 		go importedMarketCap.watchMarketCap()
 		m.WatchMarketCap(&importedMarketCap)
 		logger.Infof("Loaded marketcap from db: %s", importedMarketCap.label())
@@ -141,6 +142,7 @@ func (m *Manager) AddMarketCap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	marketCapReq.close = make(chan struct{})
 	go marketCapReq.watchMarketCap()
 	m.WatchMarketCap(&marketCapReq)
 

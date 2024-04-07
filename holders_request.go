@@ -30,6 +30,7 @@ func (m *Manager) ImportHolder() {
 			continue
 		}
 
+		importedHolders.close = make(chan struct{})
 		go importedHolders.watchHolders()
 		m.WatchHolders(&importedHolders)
 		logger.Infof("Loaded holder from db: %s", importedHolders.label())
@@ -136,6 +137,7 @@ func (m *Manager) AddHolders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	holdersReq.close = make(chan struct{})
 	go holdersReq.watchHolders()
 	m.WatchHolders(&holdersReq)
 

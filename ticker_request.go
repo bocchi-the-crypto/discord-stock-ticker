@@ -35,6 +35,8 @@ func (m *Manager) ImportTicker() {
 			importedTicker.Multiplier = 1
 		}
 
+		importedTicker.close = make(chan struct{})
+
 		// activate bot
 		if importedTicker.Crypto {
 			go importedTicker.watchCryptoPrice()
@@ -134,6 +136,8 @@ func (m *Manager) AddTicker(w http.ResponseWriter, r *http.Request) {
 	if stockReq.Multiplier == 0 {
 		stockReq.Multiplier = 1
 	}
+
+	stockReq.close = make(chan struct{})
 
 	// add stock or crypto ticker
 	if stockReq.Crypto {
@@ -237,15 +241,15 @@ func (m *Manager) DeleteTicker(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	if _, ok := m.WatchingTicker[id]; !ok {
+	if ticker, ok := m.WatchingTicker[id]; !ok {
 		logger.Errorf("No ticker found: %s", id)
 		w.WriteHeader(http.StatusNotFound)
 		return
+	} else {
+		// send shutdown sign
+		ticker.Shutdown()
+		tickerCount.Dec()
 	}
-
-	// send shutdown sign
-	m.WatchingTicker[id].Shutdown()
-	tickerCount.Dec()
 
 	var noDB *sql.DB
 	if m.DB != noDB {

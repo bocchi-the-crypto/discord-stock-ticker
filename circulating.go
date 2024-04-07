@@ -15,16 +15,16 @@ import (
 )
 
 type Circulating struct {
-	Ticker         string   `json:"ticker"`
-	Name           string   `json:"name"`
-	Nickname       bool     `json:"nickname"`
-	Frequency      int      `json:"frequency"`
-	CurrencySymbol string   `json:"currency_symbol"`
-	Decimals       int      `json:"decimals"`
-	Activity       string   `json:"activity"`
-	ClientID       string   `json:"client_id"`
-	Token          string   `json:"discord_bot_token"`
-	close          chan int `json:"-"`
+	Ticker         string        `json:"ticker"`
+	Name           string        `json:"name"`
+	Nickname       bool          `json:"nickname"`
+	Frequency      int           `json:"frequency"`
+	CurrencySymbol string        `json:"currency_symbol"`
+	Decimals       int           `json:"decimals"`
+	Activity       string        `json:"activity"`
+	ClientID       string        `json:"client_id"`
+	Token          string        `json:"discord_bot_token"`
+	close          chan struct{} `json:"-"`
 }
 
 // label returns a human readble id for this bot
@@ -38,7 +38,7 @@ func (c *Circulating) label() string {
 
 // Shutdown sends a signal to shut off the goroutine
 func (c *Circulating) Shutdown() {
-	c.close <- 1
+	c.close <- struct{}{}
 }
 
 func (c *Circulating) watchCirculating() {
@@ -91,7 +91,7 @@ func (c *Circulating) watchCirculating() {
 	ticker := time.NewTicker(time.Duration(c.Frequency) * time.Second)
 	var success bool
 
-	c.close = make(chan int, 1)
+	c.close = make(chan struct{}, 1)
 
 	// continuously watch
 	for {

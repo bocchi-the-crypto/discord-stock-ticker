@@ -33,6 +33,7 @@ func (m *Manager) ImportFloor() {
 			continue
 		}
 
+		importedFloor.close = make(chan struct{})
 		go importedFloor.watchFloorPrice()
 		m.WatchFloor(&importedFloor)
 		logger.Infof("Loaded floor from db: %s", importedFloor.label())
@@ -139,6 +140,7 @@ func (m *Manager) AddFloor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	floorReq.close = make(chan struct{})
 	go floorReq.watchFloorPrice()
 	m.WatchFloor(&floorReq)
 

@@ -15,19 +15,19 @@ import (
 )
 
 type ValueLocked struct {
-	Ticker         string   `json:"ticker"`
-	Name           string   `json:"name"`
-	Nickname       bool     `json:"nickname"`
-	Frequency      int      `json:"frequency"`
-	Decorator      string   `json:"decorator"`
-	Currency       string   `json:"currency"`
-	CurrencySymbol string   `json:"currency_symbol"`
-	Decimals       int      `json:"decimals"`
-	Activity       string   `json:"activity"`
-	Source         string   `json:"source"`
-	ClientID       string   `json:"client_id"`
-	Token          string   `json:"discord_bot_token"`
-	close          chan int `json:"-"`
+	Ticker         string        `json:"ticker"`
+	Name           string        `json:"name"`
+	Nickname       bool          `json:"nickname"`
+	Frequency      int           `json:"frequency"`
+	Decorator      string        `json:"decorator"`
+	Currency       string        `json:"currency"`
+	CurrencySymbol string        `json:"currency_symbol"`
+	Decimals       int           `json:"decimals"`
+	Activity       string        `json:"activity"`
+	Source         string        `json:"source"`
+	ClientID       string        `json:"client_id"`
+	Token          string        `json:"discord_bot_token"`
+	close          chan struct{} `json:"-"`
 }
 
 // label returns a human readble id for this bot
@@ -37,7 +37,7 @@ func (m *ValueLocked) label() string {
 
 // Shutdown sends a signal to shut off the goroutine
 func (m *ValueLocked) Shutdown() {
-	m.close <- 1
+	m.close <- struct{}{}
 }
 
 func (m *ValueLocked) watchValueLocked() {
@@ -100,7 +100,7 @@ func (m *ValueLocked) watchValueLocked() {
 	logger.Infof("Watching circulating for %s", m.Name)
 	ticker := time.NewTicker(time.Duration(m.Frequency) * time.Second)
 
-	m.close = make(chan int, 1)
+	m.close = make(chan struct{}, 1)
 
 	// continuously watch
 	for {

@@ -13,13 +13,13 @@ import (
 
 // Gas represents the gas data
 type Gas struct {
-	Network   string   `json:"network"`
-	Nickname  bool     `json:"nickname"`
-	Frequency int      `json:"frequency"`
-	APIToken  string   `json:"api_token"`
-	ClientID  string   `json:"client_id"`
-	Token     string   `json:"discord_bot_token"`
-	close     chan int `json:"-"`
+	Network   string        `json:"network"`
+	Nickname  bool          `json:"nickname"`
+	Frequency int           `json:"frequency"`
+	APIToken  string        `json:"api_token"`
+	ClientID  string        `json:"client_id"`
+	Token     string        `json:"discord_bot_token"`
+	close     chan struct{} `json:"-"`
 }
 
 // label returns a human readble id for this bot
@@ -33,7 +33,7 @@ func (g *Gas) label() string {
 
 // Shutdown sends a signal to shut off the goroutine
 func (g *Gas) Shutdown() {
-	g.close <- 1
+	g.close <- struct{}{}
 }
 
 // watchGasPrice gets gas prices and rotates through levels
@@ -79,7 +79,7 @@ func (g *Gas) watchGasPrice() {
 	logger.Infof("Watching gas price for %s", g.Network)
 	ticker := time.NewTicker(time.Duration(g.Frequency) * time.Second)
 
-	g.close = make(chan int, 1)
+	g.close = make(chan struct{}, 1)
 
 	// watch gas price
 	for {

@@ -32,6 +32,7 @@ func (m *Manager) ImportValueLocked() {
 		}
 
 		// activate bot
+		importedValueLocked.close = make(chan struct{})
 		go importedValueLocked.watchValueLocked()
 		m.WatchValueLocked(&importedValueLocked)
 		logger.Infof("Loaded valuelocked from db: %s", importedValueLocked.label())
@@ -141,6 +142,7 @@ func (m *Manager) AddValueLocked(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	valueLockedReq.close = make(chan struct{})
 	go valueLockedReq.watchValueLocked()
 	m.WatchValueLocked(&valueLockedReq)
 

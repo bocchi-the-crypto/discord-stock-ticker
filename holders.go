@@ -13,15 +13,15 @@ import (
 
 // Holders represents the json for holders
 type Holders struct {
-	Network   string   `json:"network"`
-	Address   string   `json:"address"`
-	Activity  string   `json:"activity"`
-	Nickname  bool     `json:"nickname"`
-	Frequency int      `json:"frequency"`
-	APIToken  string   `json:"api_token"`
-	ClientID  string   `json:"client_id"`
-	Token     string   `json:"discord_bot_token"`
-	close     chan int `json:"-"`
+	Network   string        `json:"network"`
+	Address   string        `json:"address"`
+	Activity  string        `json:"activity"`
+	Nickname  bool          `json:"nickname"`
+	Frequency int           `json:"frequency"`
+	APIToken  string        `json:"api_token"`
+	ClientID  string        `json:"client_id"`
+	Token     string        `json:"discord_bot_token"`
+	close     chan struct{} `json:"-"`
 }
 
 // label returns a human readble id for this bot
@@ -35,7 +35,7 @@ func (h *Holders) label() string {
 
 // Shutdown sends a signal to shut off the goroutine
 func (h *Holders) Shutdown() {
-	h.close <- 1
+	h.close <- struct{}{}
 }
 
 func (h *Holders) watchHolders() {
@@ -90,7 +90,7 @@ func (h *Holders) watchHolders() {
 	logger.Infof("Watching holders for %s", h.Address)
 	ticker := time.NewTicker(time.Duration(h.Frequency) * time.Second)
 
-	h.close = make(chan int, 1)
+	h.close = make(chan struct{}, 1)
 
 	for {
 
