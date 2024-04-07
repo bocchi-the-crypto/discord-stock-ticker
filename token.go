@@ -79,7 +79,7 @@ func (t *Token) watchTokenPrice() {
 	}
 
 	// Get guides for bot
-	guilds, err := dg.UserGuilds(100, "", "")
+	guilds, err := dg.UserGuilds(100, "", "", false)
 	if err != nil {
 		logger.Errorf("Error getting guilds: %s", err)
 		t.Nickname = false

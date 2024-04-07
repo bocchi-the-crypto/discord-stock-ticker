@@ -60,7 +60,7 @@ func (m *ValueLocked) watchValueLocked() {
 	}
 
 	// Get guides for bot
-	guilds, err := dg.UserGuilds(100, "", "")
+	guilds, err := dg.UserGuilds(100, "", "", false)
 	if err != nil {
 		logger.Errorf("Getting guilds: %s", err)
 		m.Nickname = false

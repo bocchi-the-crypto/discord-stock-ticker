@@ -74,7 +74,7 @@ func (s *Ticker) watchStockPrice() {
 	}
 
 	// Get guides for bot
-	guilds, err := dg.UserGuilds(100, "", "")
+	guilds, err := dg.UserGuilds(100, "", "", false)
 	if err != nil {
 		logger.Errorf("Getting guilds (%s): %s", s.ClientID, err)
 		s.Nickname = false
@@ -367,7 +367,7 @@ func (s *Ticker) watchCryptoPrice() {
 	}
 
 	// Get guides for bot
-	guilds, err := dg.UserGuilds(100, "", "")
+	guilds, err := dg.UserGuilds(100, "", "", false)
 	if err != nil {
 		logger.Errorf("Getting guilds: %s", err)
 		s.Nickname = false
