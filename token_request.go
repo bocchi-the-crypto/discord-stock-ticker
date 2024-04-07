@@ -155,7 +155,7 @@ func (m *Manager) AddToken(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	logger.Infof("Added token: %s-%s\n", tokenReq.Network, tokenReq.Contract)
+	logger.Infof("Added token: %s-%s", tokenReq.Network, tokenReq.Contract)
 }
 
 func (m *Manager) WatchToken(token *Token) {

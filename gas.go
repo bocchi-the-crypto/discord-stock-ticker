@@ -42,7 +42,7 @@ func (g *Gas) watchGasPrice() {
 	// create a new discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + g.Token)
 	if err != nil {
-		logger.Errorf("Creating Discord session (%s): %s", g.ClientID, err)
+		logger.Errorf("Error creating Discord session (%s): %s", g.ClientID, err)
 		lastUpdate.With(prometheus.Labels{"type": "gas", "ticker": g.Network, "guild": "None"}).Set(0)
 		return
 	}
@@ -50,7 +50,7 @@ func (g *Gas) watchGasPrice() {
 	// show as online
 	err = dg.Open()
 	if err != nil {
-		logger.Errorf("Opening discord connection (%s): %s", g.ClientID, err)
+		logger.Errorf("Error opening discord connection (%s): %s", g.ClientID, err)
 		lastUpdate.With(prometheus.Labels{"type": "gas", "ticker": g.Network, "guild": "None"}).Set(0)
 		return
 	}
@@ -58,7 +58,7 @@ func (g *Gas) watchGasPrice() {
 	// Get guides for bot
 	guilds, err := dg.UserGuilds(100, "", "")
 	if err != nil {
-		logger.Errorf("Error getting guilds: %s\n", err)
+		logger.Errorf("Error getting guilds: %s", err)
 		g.Nickname = false
 	}
 	if len(guilds) == 0 {
@@ -86,13 +86,13 @@ func (g *Gas) watchGasPrice() {
 
 		select {
 		case <-g.close:
-			logger.Infof("Shutting down price watching for %s\n", g.Network)
+			logger.Infof("Shutting down price watching for %s", g.Network)
 			return
 		case <-ticker.C:
 			// get gas prices
 			gasPrices, err := utils.GetGasPrices(g.Network, g.APIToken)
 			if err != nil {
-				logger.Errorf("Error getting rates: %s\n", err)
+				logger.Errorf("Error getting rates: %s", err)
 				continue
 			}
 
@@ -105,10 +105,10 @@ func (g *Gas) watchGasPrice() {
 
 					err = dg.GuildMemberNickname(gu.ID, "@me", nickname)
 					if err != nil {
-						logger.Errorf("Error updating nickname: %s\n", err)
+						logger.Errorf("Error updating nickname: %s", err)
 						continue
 					} else {
-						logger.Debugf("Set nickname in %s: %s\n", gu.Name, nickname)
+						logger.Debugf("Set nickname in %s: %s", gu.Name, nickname)
 					}
 					lastUpdate.With(prometheus.Labels{"type": "gas", "ticker": g.Network, "guild": gu.Name}).SetToCurrentTime()
 					time.Sleep(time.Duration(g.Frequency) * time.Second)
@@ -116,7 +116,7 @@ func (g *Gas) watchGasPrice() {
 
 				err = dg.UpdateWatchStatus(0, "Fast, Avg, Slow")
 				if err != nil {
-					logger.Errorf("Unable to set activity: %s\n", err)
+					logger.Errorf("Unable to set activity: %s", err)
 				} else {
 					logger.Debugf("Set activity")
 				}
@@ -124,9 +124,9 @@ func (g *Gas) watchGasPrice() {
 
 				err = dg.UpdateWatchStatus(0, nickname)
 				if err != nil {
-					logger.Errorf("Unable to set activity: %s\n", err)
+					logger.Errorf("Unable to set activity: %s", err)
 				} else {
-					logger.Debugf("Set activity: %s\n", nickname)
+					logger.Debugf("Set activity: %s", nickname)
 					lastUpdate.With(prometheus.Labels{"type": "gas", "ticker": g.Network, "guild": "None"}).SetToCurrentTime()
 				}
 			}

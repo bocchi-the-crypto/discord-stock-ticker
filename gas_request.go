@@ -145,7 +145,7 @@ func (m *Manager) AddGas(w http.ResponseWriter, r *http.Request) {
 		logger.Errorf("Unable to encode gas: %s", err)
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	logger.Infof("Added gas: %s\n", gasReq.Network)
+	logger.Infof("Added gas: %s", gasReq.Network)
 }
 
 func (m *Manager) WatchGas(gas *Gas) {

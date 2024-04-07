@@ -152,7 +152,7 @@ func (m *Manager) AddHolders(w http.ResponseWriter, r *http.Request) {
 		logger.Errorf("Unable to encode holders: %s", err)
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	logger.Infof("Added holder: %s-%s\n", holdersReq.Network, holdersReq.Address)
+	logger.Infof("Added holder: %s-%s", holdersReq.Network, holdersReq.Address)
 }
 
 func (m *Manager) WatchHolders(holders *Holders) {

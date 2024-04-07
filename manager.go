@@ -289,7 +289,7 @@ func dbInit(fileName string) *sql.DB {
 
 	db, err := sql.Open("sqlite", fileName)
 	if err != nil {
-		logger.Errorf("Unable to open db file: %s\n", err)
+		logger.Errorf("Unable to open db file: %s", err)
 		logger.Warning("Will not be storing state.")
 		return db
 	}
@@ -420,7 +420,7 @@ func dbInit(fileName string) *sql.DB {
 
 	_, err = db.Exec(bootstrap)
 	if err != nil {
-		logger.Errorf("Unable to bootstrap db file: %s\n", err)
+		logger.Errorf("Unable to bootstrap db file: %s", err)
 		logger.Warning("Will not be storing state.")
 		var dbNull *sql.DB
 		return dbNull
@@ -432,7 +432,7 @@ func dbInit(fileName string) *sql.DB {
 		logger.Warnln("Added new column to tickers: multiplier (1)")
 	} else if err.Error() == "SQL logic error: duplicate column name: multiplier (1)" {
 		logger.Debug("New column already exists in tickers: multiplier (1)")
-	} else if err != nil {
+	} else {
 		logger.Errorln(err)
 		logger.Warning("Will not be storing state.")
 		var dbNull *sql.DB
@@ -445,7 +445,7 @@ func dbInit(fileName string) *sql.DB {
 		logger.Warnln("Added new column to gases: apiToken (1)")
 	} else if err.Error() == "SQL logic error: duplicate column name: apiToken (1)" {
 		logger.Debug("New column already exists in gases: apiToken (1)")
-	} else if err != nil {
+	} else {
 		logger.Errorln(err)
 		logger.Warning("Will not be storing state.")
 		var dbNull *sql.DB
@@ -458,7 +458,7 @@ func dbInit(fileName string) *sql.DB {
 		logger.Warnln("Added new column to floors: activity (1)")
 	} else if err.Error() == "SQL logic error: duplicate column name: activity (1)" {
 		logger.Debug("New column already exists in floors: activity (1)")
-	} else if err != nil {
+	} else {
 		logger.Errorln(err)
 		logger.Warning("Will not be storing state.")
 		var dbNull *sql.DB
@@ -471,7 +471,7 @@ func dbInit(fileName string) *sql.DB {
 		logger.Warnln("Added new column to floors: color (1)")
 	} else if err.Error() == "SQL logic error: duplicate column name: color (1)" {
 		logger.Debug("New column already exists in floors: color (1)")
-	} else if err != nil {
+	} else {
 		logger.Errorln(err)
 		logger.Warning("Will not be storing state.")
 		var dbNull *sql.DB
@@ -484,7 +484,7 @@ func dbInit(fileName string) *sql.DB {
 		logger.Warnln("Added new column to floors: decorator (1)")
 	} else if err.Error() == "SQL logic error: duplicate column name: decorator (1)" {
 		logger.Debug("New column already exists in floors: decorator (1)")
-	} else if err != nil {
+	} else {
 		logger.Errorln(err)
 		logger.Warning("Will not be storing state.")
 		var dbNull *sql.DB
@@ -497,7 +497,7 @@ func dbInit(fileName string) *sql.DB {
 		logger.Warnln("Added new column to floors: currency (1)")
 	} else if err.Error() == "SQL logic error: duplicate column name: currency (1)" {
 		logger.Debug("New column already exists in floors: currency (1)")
-	} else if err != nil {
+	} else {
 		logger.Errorln(err)
 		logger.Warning("Will not be storing state.")
 		var dbNull *sql.DB
@@ -510,14 +510,14 @@ func dbInit(fileName string) *sql.DB {
 		logger.Warnln("Added new column to holders: apiToken (1)")
 	} else if err.Error() == "SQL logic error: duplicate column name: apiToken (1)" {
 		logger.Debug("New column already exists in floors: apiToken (1)")
-	} else if err != nil {
+	} else {
 		logger.Errorln(err)
 		logger.Warning("Will not be storing state.")
 		var dbNull *sql.DB
 		return dbNull
 	}
 
-	logger.Infof("Will be storing state in %s\n", fileName)
+	logger.Infof("Will be storing state in %s", fileName)
 
 	return db
 }

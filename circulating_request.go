@@ -147,7 +147,7 @@ func (m *Manager) AddCirculating(w http.ResponseWriter, r *http.Request) {
 		logger.Errorf("Unable to encode circulatings: %s", err)
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	logger.Infof("Added circulating: %s\n", circulatingReq.Name)
+	logger.Infof("Added circulating: %s", circulatingReq.Name)
 }
 
 func (m *Manager) WatchCirculating(circulating *Circulating) {

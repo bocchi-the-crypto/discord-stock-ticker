@@ -65,7 +65,7 @@ func (t *Token) watchTokenPrice() {
 	// create a new discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + t.Token)
 	if err != nil {
-		logger.Errorf("Creating Discord session (%s): %s", t.ClientID, err)
+		logger.Errorf("Error creating Discord session (%s): %s", t.ClientID, err)
 		lastUpdate.With(prometheus.Labels{"type": "token", "ticker": fmt.Sprintf("%s-%s", t.Network, t.Contract), "guild": "None"}).Set(0)
 		return
 	}
@@ -73,7 +73,7 @@ func (t *Token) watchTokenPrice() {
 	// show as online
 	err = dg.Open()
 	if err != nil {
-		logger.Errorf("Opening discord connection (%s): %s", t.ClientID, err)
+		logger.Errorf("Error opening discord connection (%s): %s", t.ClientID, err)
 		lastUpdate.With(prometheus.Labels{"type": "token", "ticker": fmt.Sprintf("%s-%s", t.Network, t.Contract), "guild": "None"}).Set(0)
 		return
 	}
@@ -81,7 +81,7 @@ func (t *Token) watchTokenPrice() {
 	// Get guides for bot
 	guilds, err := dg.UserGuilds(100, "", "")
 	if err != nil {
-		logger.Errorf("Error getting guilds: %s\n", err)
+		logger.Errorf("Error getting guilds: %s", err)
 		t.Nickname = false
 	}
 	if len(guilds) == 0 {
@@ -224,7 +224,7 @@ func (t *Token) watchTokenPrice() {
 				for _, g := range guilds {
 					err = dg.GuildMemberNickname(g.ID, "@me", nickname)
 					if err != nil {
-						logger.Errorf("Error updating nickname: %s\n", err)
+						logger.Errorf("Error updating nickname: %s", err)
 						continue
 					}
 					logger.Debugf("Set nickname in %s: %s", g.Name, nickname)

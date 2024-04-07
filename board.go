@@ -61,7 +61,7 @@ func (b *Board) watchStockPrice() {
 	// Get guides for bot
 	guilds, err := dg.UserGuilds(100, "", "")
 	if err != nil {
-		logger.Errorf("Error getting guilds: %s\n", err)
+		logger.Errorf("Error getting guilds: %s", err)
 		b.Nickname = false
 	}
 	if len(guilds) == 0 {
@@ -170,7 +170,7 @@ func (b *Board) watchStockPrice() {
 					for _, g := range guilds {
 						err = dg.GuildMemberNickname(g.ID, "@me", nickname)
 						if err != nil {
-							logger.Errorf("Error updating nickname: %s\n", err)
+							logger.Errorf("Error updating nickname: %s", err)
 							continue
 						}
 						logger.Infof("Set nickname in %s: %s", g.Name, nickname)
@@ -185,7 +185,7 @@ func (b *Board) watchStockPrice() {
 
 					err = dg.UpdateWatchStatus(0, b.Name)
 					if err != nil {
-						logger.Errorf("Unable to set activity: %s\n", err)
+						logger.Errorf("Unable to set activity: %s", err)
 					} else {
 						logger.Infof("Set activity: %s", activity)
 					}
@@ -202,7 +202,7 @@ func (b *Board) watchStockPrice() {
 
 					err = dg.UpdateWatchStatus(0, activity)
 					if err != nil {
-						logger.Errorf("Unable to set activity: %s\n", err)
+						logger.Errorf("Unable to set activity: %s", err)
 					} else {
 						logger.Infof("Set activity: %s", activity)
 						lastUpdate.With(prometheus.Labels{"type": "board", "ticker": b.Name, "guild": "None"}).SetToCurrentTime()
@@ -218,7 +218,7 @@ func (b *Board) watchCryptoPrice() {
 	// create a new discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + b.Token)
 	if err != nil {
-		logger.Errorf("Error creating Discord session: %s\n", err)
+		logger.Errorf("Error creating Discord session: %s", err)
 		lastUpdate.With(prometheus.Labels{"type": "board", "ticker": b.Name, "guild": "None"}).Set(0)
 		return
 	}
@@ -226,7 +226,7 @@ func (b *Board) watchCryptoPrice() {
 	// show as online
 	err = dg.Open()
 	if err != nil {
-		logger.Errorf("error opening discord connection: %s\n", err)
+		logger.Errorf("error opening discord connection: %s", err)
 		lastUpdate.With(prometheus.Labels{"type": "board", "ticker": b.Name, "guild": "None"}).Set(0)
 		return
 	}
@@ -234,7 +234,7 @@ func (b *Board) watchCryptoPrice() {
 	// Get guides for bot
 	guilds, err := dg.UserGuilds(100, "", "")
 	if err != nil {
-		logger.Errorf("Error getting guilds: %s\n", err)
+		logger.Errorf("Error getting guilds: %s", err)
 		b.Nickname = false
 	}
 	if len(guilds) == 0 {
@@ -344,7 +344,7 @@ func (b *Board) watchCryptoPrice() {
 					for _, g := range guilds {
 						err = dg.GuildMemberNickname(g.ID, "@me", nickname)
 						if err != nil {
-							logger.Errorf("Error updating nickname: %s\n", err)
+							logger.Errorf("Error updating nickname: %s", err)
 							continue
 						}
 						logger.Infof("Set nickname in %s: %s", g.Name, nickname)
@@ -359,7 +359,7 @@ func (b *Board) watchCryptoPrice() {
 
 					err = dg.UpdateWatchStatus(0, b.Name)
 					if err != nil {
-						logger.Errorf("Unable to set activity: %s\n", err)
+						logger.Errorf("Unable to set activity: %s", err)
 					} else {
 						logger.Infof("Set activity: %s", activity)
 					}
@@ -370,7 +370,7 @@ func (b *Board) watchCryptoPrice() {
 					activity := fmt.Sprintf("%s $%s %s %s", strings.ToUpper(priceData.Symbol), fmtPrice, decorator, fmtDiff)
 					err = dg.UpdateWatchStatus(0, activity)
 					if err != nil {
-						logger.Errorf("Unable to set activity: %s\n", err)
+						logger.Errorf("Unable to set activity: %s", err)
 					} else {
 						logger.Infof("Set activity: %s", activity)
 						lastUpdate.With(prometheus.Labels{"type": "board", "ticker": b.Name}).SetToCurrentTime()

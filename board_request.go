@@ -174,7 +174,7 @@ func (m *Manager) AddBoard(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	logger.Infof("Added board: %s\n", boardReq.Name)
+	logger.Infof("Added board: %s", boardReq.Name)
 }
 
 func (m *Manager) WatchBoard(board *Board) {

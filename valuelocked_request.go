@@ -157,7 +157,7 @@ func (m *Manager) AddValueLocked(w http.ResponseWriter, r *http.Request) {
 		logger.Errorf("Unable to encode valuelocks: %s", err)
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	logger.Infof("Added valuelocked: %s\n", valueLockedReq.Name)
+	logger.Infof("Added valuelocked: %s", valueLockedReq.Name)
 }
 
 func (m *Manager) WatchValueLocked(valuelocked *ValueLocked) {

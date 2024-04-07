@@ -155,7 +155,7 @@ func (m *Manager) AddFloor(w http.ResponseWriter, r *http.Request) {
 		logger.Errorf("Unable to encode floor: %s", err)
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	logger.Infof("Added floor: %s\n", floorReq.Marketplace)
+	logger.Infof("Added floor: %s", floorReq.Marketplace)
 }
 
 func (m *Manager) WatchFloor(floor *Floor) {

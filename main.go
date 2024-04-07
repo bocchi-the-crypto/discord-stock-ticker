@@ -53,7 +53,7 @@ func main() {
 	var wg sync.WaitGroup
 
 	if *version {
-		logger.Infof("discord-stock-ticker@%s\n", buildVersion)
+		logger.Infof("discord-stock-ticker@%s", buildVersion)
 		return
 	}
 

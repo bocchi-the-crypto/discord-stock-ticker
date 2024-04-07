@@ -198,7 +198,7 @@ func (m *Manager) AddTicker(w http.ResponseWriter, r *http.Request) {
 		logger.Errorf("Unable to encode ticker: %s", err)
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	logger.Infof("Added ticker: %s\n", stockReq.Ticker)
+	logger.Infof("Added ticker: %s", stockReq.Ticker)
 }
 
 // WatchTicker keeps track of running

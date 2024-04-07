@@ -43,7 +43,7 @@ func (h *Holders) watchHolders() {
 	// create a new discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + h.Token)
 	if err != nil {
-		logger.Errorf("Creating Discord session (%s): %s", h.ClientID, err)
+		logger.Errorf("Error creating Discord session (%s): %s", h.ClientID, err)
 		lastUpdate.With(prometheus.Labels{"type": "holders", "ticker": fmt.Sprintf("%s-%s", h.Network, h.Address), "guild": "None"}).Set(0)
 		return
 	}
@@ -51,7 +51,7 @@ func (h *Holders) watchHolders() {
 	// show as online
 	err = dg.Open()
 	if err != nil {
-		logger.Errorf("Opening discord connection (%s): %s", h.ClientID, err)
+		logger.Errorf("Error opening discord connection (%s): %s", h.ClientID, err)
 		lastUpdate.With(prometheus.Labels{"type": "holders", "ticker": fmt.Sprintf("%s-%s", h.Network, h.Address), "guild": "None"}).Set(0)
 		return
 	}
@@ -60,7 +60,7 @@ func (h *Holders) watchHolders() {
 	if h.Nickname {
 		err = dg.UpdateWatchStatus(0, h.Activity)
 		if err != nil {
-			logger.Errorf("Unable to set activity: %s\n", err)
+			logger.Errorf("Unable to set activity: %s", err)
 		} else {
 			logger.Debugf("Set activity")
 		}
@@ -69,7 +69,7 @@ func (h *Holders) watchHolders() {
 	// get guides for bot
 	guilds, err := dg.UserGuilds(100, "", "")
 	if err != nil {
-		logger.Errorf("Error getting guilds: %s\n", err)
+		logger.Errorf("Error getting guilds: %s", err)
 		h.Nickname = false
 	}
 	if len(guilds) == 0 {
@@ -113,10 +113,10 @@ func (h *Holders) watchHolders() {
 
 					err = dg.GuildMemberNickname(g.ID, "@me", displayName)
 					if err != nil {
-						logger.Errorf("Error updating nickname: %s\n", err)
+						logger.Errorf("Error updating nickname: %s", err)
 						continue
 					} else {
-						logger.Debugf("Set nickname in %s: %s\n", g.Name, displayName)
+						logger.Debugf("Set nickname in %s: %s", g.Name, displayName)
 					}
 					lastUpdate.With(prometheus.Labels{"type": "holders", "ticker": fmt.Sprintf("%s-%s", h.Network, h.Address), "guild": g.Name}).SetToCurrentTime()
 					time.Sleep(time.Duration(h.Frequency) * time.Second)
@@ -125,9 +125,9 @@ func (h *Holders) watchHolders() {
 
 				err = dg.UpdateWatchStatus(0, displayName)
 				if err != nil {
-					logger.Errorf("Unable to set activity: %s\n", err)
+					logger.Errorf("Unable to set activity: %s", err)
 				} else {
-					logger.Debugf("Set activity: %s\n", displayName)
+					logger.Debugf("Set activity: %s", displayName)
 					lastUpdate.With(prometheus.Labels{"type": "holders", "ticker": fmt.Sprintf("%s-%s", h.Network, h.Address), "guild": "None"}).SetToCurrentTime()
 				}
 			}

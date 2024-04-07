@@ -157,7 +157,7 @@ func (m *Manager) AddMarketCap(w http.ResponseWriter, r *http.Request) {
 		logger.Errorf("Unable to encode marketcaps: %s", err)
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	logger.Infof("Added marketcap: %s\n", marketCapReq.Name)
+	logger.Infof("Added marketcap: %s", marketCapReq.Name)
 }
 
 func (m *Manager) WatchMarketCap(marketcap *MarketCap) {

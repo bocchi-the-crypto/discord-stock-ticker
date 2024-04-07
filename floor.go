@@ -64,7 +64,7 @@ func (f *Floor) watchFloorPrice() {
 	// Get guides for bot
 	guilds, err := dg.UserGuilds(100, "", "")
 	if err != nil {
-		logger.Errorf("Error getting guilds: %s\n", err)
+		logger.Errorf("Error getting guilds: %s", err)
 		f.Nickname = false
 	}
 	if len(guilds) == 0 {
@@ -116,7 +116,7 @@ func (f *Floor) watchFloorPrice() {
 		case <-ticker.C:
 			price, activity, currency, err := utils.GetFloorPrice(f.Marketplace, f.Name)
 			if err != nil {
-				logger.Errorf("Error getting floor rates: %s\n", err)
+				logger.Errorf("Error getting floor rates: %s", err)
 				continue
 			}
 
@@ -154,7 +154,7 @@ func (f *Floor) watchFloorPrice() {
 				for _, g := range guilds {
 					err = dg.GuildMemberNickname(g.ID, "@me", priceString)
 					if err != nil {
-						logger.Errorf("Updating nickname: %s", err)
+						logger.Errorf("Error updating nickname: %s", err)
 						continue
 					}
 					logger.Debugf("Set nickname in %s: %f", g.Name, price)
@@ -191,7 +191,7 @@ func (f *Floor) watchFloorPrice() {
 
 				err = dg.UpdateWatchStatus(0, f.Activity)
 				if err != nil {
-					logger.Errorf("Unable to set activity: %s\n", err)
+					logger.Errorf("Unable to set activity: %s", err)
 				} else {
 					logger.Debugf("Set activity: %s", f.Activity)
 				}
@@ -199,9 +199,9 @@ func (f *Floor) watchFloorPrice() {
 
 				err = dg.UpdateGameStatus(0, priceString)
 				if err != nil {
-					logger.Errorf("Unable to set activity: %s\n", err)
+					logger.Errorf("Unable to set activity: %s", err)
 				} else {
-					logger.Debugf("Set activity: %f\n", price)
+					logger.Debugf("Set activity: %f", price)
 					lastUpdate.With(prometheus.Labels{"type": "floor", "ticker": f.Name, "guild": "None"}).SetToCurrentTime()
 				}
 			}
