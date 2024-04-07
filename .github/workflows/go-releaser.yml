@@ -1,0 +1,39 @@
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        required: false
+        type: string
+        default: '1.22'
+      release-args:
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  go-releaser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go-version }}
+
+      - uses: golangci/golangci-lint-action@v4.0.0
+
+      - uses: goreleaser/goreleaser-action@v5.0.0
+        with:
+          args: check
+
+      - if: github.event_name == 'pull_request'
+        uses: goreleaser/goreleaser-action@v5.0.0
+        with:
+          args: release --clean --snapshot
+
+      - if: github.event_name == 'release'
+        uses: goreleaser/goreleaser-action@v5.0.0
+        with:
+          args: release --clean ${{ inputs.release-args }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
