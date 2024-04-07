@@ -141,8 +141,9 @@ func (s *Ticker) watchStockPrice() {
 
 			var fmtPrice string
 			var fmtDiffPercent string
+			var diffPercent float64
 			var fmtDiffChange string
-
+			var marketState string
 			// use twelve data as source
 			if s.TwelveDataKey != "" {
 				priceDataTS, err := utils.GetTimeSeries(s.Ticker, "min", s.TwelveDataKey)
@@ -181,7 +182,9 @@ func (s *Ticker) watchStockPrice() {
 
 				fmtDiff := nowRaw - closeRaw
 				fmtDiffChange = fmt.Sprintf("%.2f", fmtDiff)
-				fmtDiffPercent = fmt.Sprintf("%.2f%%", (fmtDiff/closeRaw)*100)
+				diffPercent = (fmtDiff / closeRaw) * 100
+				fmtDiffPercent = fmt.Sprintf("%.2f%%", diffPercent)
+				marketState = ""
 			} else {
 				// use yahoo as source
 				priceData, err := utils.GetStockPrice(s.Ticker)
@@ -205,15 +208,22 @@ func (s *Ticker) watchStockPrice() {
 					fmtPrice = strconv.FormatFloat(rawPrice, 'f', 2, 64)
 				}
 
+				marketState = priceData.QuoteSummary.Results[0].Price.MarketState
 				// check for day or after hours change
-				if priceData.QuoteSummary.Results[0].Price.MarketState == "POST" {
-					fmtDiffPercent = priceData.QuoteSummary.Results[0].Price.PostMarketChangePercent.Fmt
+				if marketState == "POST" {
+					diffPercentStruct := priceData.QuoteSummary.Results[0].Price.PostMarketChangePercent
+					diffPercent = diffPercentStruct.Raw
+					fmtDiffPercent = diffPercentStruct.Fmt
 					fmtDiffChange = priceData.QuoteSummary.Results[0].Price.PostMarketChange.Fmt
-				} else if priceData.QuoteSummary.Results[0].Price.MarketState == "PRE" {
-					fmtDiffPercent = priceData.QuoteSummary.Results[0].Price.PreMarketChangePercent.Fmt
+				} else if marketState == "PRE" {
+					diffPercentStruct := priceData.QuoteSummary.Results[0].Price.PreMarketChangePercent
+					diffPercent = diffPercentStruct.Raw
+					fmtDiffPercent = diffPercentStruct.Fmt
 					fmtDiffChange = priceData.QuoteSummary.Results[0].Price.PreMarketChange.Fmt
 				} else {
-					fmtDiffPercent = priceData.QuoteSummary.Results[0].Price.RegularMarketChangePercent.Fmt
+					diffPercentStruct := priceData.QuoteSummary.Results[0].Price.RegularMarketChangePercent
+					diffPercent = diffPercentStruct.Raw
+					fmtDiffPercent = diffPercentStruct.Fmt
 					fmtDiffChange = priceData.QuoteSummary.Results[0].Price.RegularMarketChange.Fmt
 				}
 			}
@@ -228,6 +238,15 @@ func (s *Ticker) watchStockPrice() {
 				increase = true
 			}
 
+			// add plus sign to diff percentage
+			if diffPercent >= 0.0005 {
+				fmtDiffPercent = "+" + fmtDiffPercent
+			}
+
+			// removes the '%' in the end (e.g., 1.1% becomes 1.1)
+			// for flexibility when formatting string
+			fmtDiffPercent = strings.TrimSuffix(fmtDiffPercent, "%")
+
 			if arrows {
 				s.Decorator = "⬊"
 				if increase {
@@ -240,9 +259,16 @@ func (s *Ticker) watchStockPrice() {
 				var nickname string
 				var activity string
 
-				// format nickname & activity
-				nickname = fmt.Sprintf("%s %s %s%s", strings.ToUpper(s.Name), s.Decorator, s.CurrencySymbol, fmtPrice)
-				activity = fmt.Sprintf("%s%s (%s)", s.CurrencySymbol, fmtDiffChange, fmtDiffPercent)
+				// format nickname, looks like "201.75 USD"
+				nickname = fmt.Sprintf("%s %s", fmtPrice, strings.ToUpper(s.Currency))
+
+				// format activity, looks like "+0.82 % | TSLA"
+				// fmtDiffChange may be added to activity as well, if preferred
+				if len(marketState) > 0 {
+					activity = fmt.Sprintf("%s %% | %s (%s)", fmtDiffPercent, strings.ToUpper(strings.ToUpper(s.Name)), marketState)
+				} else {
+					activity = fmt.Sprintf("%s %% | %s", fmtDiffPercent, strings.ToUpper(strings.ToUpper(s.Name)))
+				}
 
 				// Update nickname in guilds
 				for _, g := range guilds {
@@ -262,7 +288,6 @@ func (s *Ticker) watchStockPrice() {
 						}
 					}
 
-					time.Sleep(time.Duration(s.Frequency) * time.Second)
 				}
 
 				// Custom activity messages
@@ -282,30 +307,28 @@ func (s *Ticker) watchStockPrice() {
 					}
 				}
 
-				err = dg.UpdateWatchStatus(0, activity)
+				err = dg.UpdateCustomStatus(activity)
 				if err != nil {
-					logger.Errorf("Unable to set activity: %s", err)
+					logger.Errorf("Unable to set custom status: %s", err)
 				} else {
-					logger.Debugf("Set activity: %s", activity)
+					logger.Debugf("Set custom status: %s", activity)
 				}
 
 			} else {
 				activity := fmt.Sprintf("%s %s %s", fmtPrice, s.Decorator, fmtDiffPercent)
 
-				err = dg.UpdateWatchStatus(0, activity)
+				err = dg.UpdateCustomStatus(activity)
 				if err != nil {
-					logger.Errorf("Unable to set activity: %s", err)
+					logger.Errorf("Unable to set custom status: %s", err)
 				} else {
-					logger.Debugf("Set activity: %s", activity)
+					logger.Debugf("Set custom status: %s", activity)
 					lastUpdate.With(prometheus.Labels{"type": "ticker", "ticker": s.Ticker, "guild": "None"}).SetToCurrentTime()
 				}
-
 			}
 
+			time.Sleep(time.Duration(s.Frequency) * time.Second)
 		}
-
 	}
-
 }
 
 func (s *Ticker) watchCryptoPrice() {
@@ -438,7 +461,7 @@ func (s *Ticker) watchCryptoPrice() {
 			var priceData utils.GeckoPriceResults
 			var fmtPrice string
 			var fmtChange string
-			var changeHeader string
+			// var changeHeader string
 			var fmtDiffPercent string
 
 			// get the coin price data
@@ -531,6 +554,11 @@ func (s *Ticker) watchCryptoPrice() {
 				increase = true
 			}
 
+			// add plus sign to diff percentage
+			if priceData.MarketData.PriceChangePercent >= 0.0005 {
+				fmtDiffPercent = "+" + fmtDiffPercent
+			}
+
 			// set arrows based on movement
 			if arrows {
 				s.Decorator = "⬊"
@@ -552,12 +580,8 @@ func (s *Ticker) watchCryptoPrice() {
 					displayName = strings.ToUpper(priceData.Symbol)
 				}
 
-				// format nickname
-				if displayName == s.Decorator {
-					nickname = fmtPrice
-				} else {
-					nickname = fmt.Sprintf("%s %s %s", displayName, s.Decorator, fmtPrice)
-				}
+				// format nickname, looks like "0.059741 USD"
+				nickname = fmt.Sprintf("%s %s", fmtPrice, strings.ToUpper(s.Currency))
 
 				// format activity
 				if s.Pair != "" {
@@ -571,7 +595,7 @@ func (s *Ticker) watchCryptoPrice() {
 					}
 					if err != nil {
 						logger.Errorf("Unable to fetch pair price for %s: %s", s.Pair, err)
-						activity = fmt.Sprintf("%s%s (%s%%)", changeHeader, fmtChange, fmtDiffPercent)
+						activity = fmt.Sprintf("%s%%", fmtDiffPercent)
 					} else {
 
 						// set pair
@@ -594,9 +618,9 @@ func (s *Ticker) watchCryptoPrice() {
 					}
 				} else {
 					if math.Abs(priceData.MarketData.PriceChangeCurrency.USD) < 0.01 {
-						activity = fmt.Sprintf("%s%%", fmtDiffPercent)
+						activity = fmt.Sprintf("%s %% | %s%s", fmtDiffPercent, strings.ToUpper(priceData.Symbol), strings.ToUpper(s.Currency))
 					} else {
-						activity = fmt.Sprintf("%s%s (%s%%)", changeHeader, fmtChange, fmtDiffPercent)
+						activity = fmt.Sprintf("%s %% | %s%s", fmtDiffPercent, strings.ToUpper(priceData.Symbol), strings.ToUpper(s.Currency))
 					}
 				}
 
@@ -617,8 +641,6 @@ func (s *Ticker) watchCryptoPrice() {
 							logger.Errorf("Color roles: %s", err)
 						}
 					}
-
-					time.Sleep(time.Duration(s.Frequency) * time.Second)
 				}
 
 				// Custom activity messages
@@ -641,16 +663,17 @@ func (s *Ticker) watchCryptoPrice() {
 				// set activity
 				wg := sync.WaitGroup{}
 				for _, sess := range shards {
-					err = sess.UpdateWatchStatus(0, activity)
+					err = sess.UpdateCustomStatus(activity)
 					if err != nil {
-						logger.Errorf("Unable to set activity: %s", err)
+						logger.Errorf("Unable to set custom status: %s", err)
 					} else {
-						logger.Debugf("Set activity: %s", activity)
+						logger.Debugf("Set custom status: %s", activity)
 						lastUpdate.With(prometheus.Labels{"type": "ticker", "ticker": s.Name, "guild": "None"}).SetToCurrentTime()
 					}
 				}
 				wg.Wait()
 
+				time.Sleep(time.Duration(s.Frequency) * time.Second)
 			} else {
 
 				// format activity
@@ -658,11 +681,11 @@ func (s *Ticker) watchCryptoPrice() {
 
 				wg := sync.WaitGroup{}
 				for _, sess := range shards {
-					err = sess.UpdateWatchStatus(0, activity)
+					err = sess.UpdateCustomStatus(activity)
 					if err != nil {
-						logger.Errorf("Unable to set activity: %s", err)
+						logger.Errorf("Unable to set custom status: %s", err)
 					} else {
-						logger.Debugf("Set activity: %s", activity)
+						logger.Debugf("Set custom status: %s", activity)
 						lastUpdate.With(prometheus.Labels{"type": "ticker", "ticker": s.Name, "guild": "None"}).SetToCurrentTime()
 					}
 				}
