@@ -1,4 +1,4 @@
-FROM golang:latest
+FROM golang:latest AS builder
 
 WORKDIR /go/src/discord-stock-ticker
 
@@ -9,4 +9,10 @@ ARG TARGETARCH=amd64
 
 RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o discord-stock-ticker
 
-ENTRYPOINT ["/go/src/discord-stock-ticker/discord-stock-ticker"]
+FROM alpine:latest
+
+WORKDIR /app/
+
+COPY --from=builder /go/src/discord-stock-ticker/discord-stock-ticker .
+
+ENTRYPOINT ["./discord-stock-ticker"]
